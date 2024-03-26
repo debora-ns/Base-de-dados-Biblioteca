@@ -1,0 +1,345 @@
+-- Criando o banco de dados com codificação UTF8
+CREATE DATABASE BIBLIOTECA
+    WITH
+    OWNER = postgres
+    ENCODING = 'UTF8'
+    CONNECTION LIMIT = -1;
+
+-- Utilizando transações para garantir integridade
+BEGIN;
+
+-- Tabela Editora
+CREATE TABLE IF NOT EXISTS EDITORA (
+    IdEditora SERIAL PRIMARY KEY,
+    Nome VARCHAR(255) NOT NULL UNIQUE
+);
+
+-- Dados da tabela Editora
+INSERT INTO EDITORA (Nome)
+VALUES 
+    ('Bookman'), 
+    ('Edgard Blusher'), 
+    ('Nova Terra'), 
+    ('Brasport');
+
+-- Tabela Categoria
+CREATE TABLE IF NOT EXISTS CATEGORIA (
+    IdCategoria SERIAL PRIMARY KEY,
+    Nome VARCHAR(255) NOT NULL UNIQUE
+);
+
+-- Dados da tabela Categoria
+INSERT INTO CATEGORIA (Nome)
+VALUES 
+    ('Banco de Dados'),
+    ('HTML'),
+    ('Java'),
+    ('PHP');
+
+-- Tabela Autor
+CREATE TABLE IF NOT EXISTS AUTOR (
+    IdAutor SERIAL PRIMARY KEY,
+    Nome VARCHAR(255) NOT NULL
+);
+
+-- Dados da tabela Autor
+INSERT INTO AUTOR (Nome)
+VALUES 
+    ('Waldemar Setzer'),
+    ('Flávio Soares'),
+    ('John Watson'),
+    ('Rui Rossi dos Santos'),
+    ('Antonio Pereira de Resende'),
+    ('Claudiney Calixto Lima'),
+    ('Evandro Carlos Teruel'),
+    ('Ian Graham'),
+    ('Fabrício Xavier'),
+    ('Pablo Dalloglio');
+
+-- Tabela Livro
+CREATE TABLE IF NOT EXISTS LIVRO (
+    IdLivro SERIAL PRIMARY KEY,
+    IdEditora INTEGER NOT NULL,
+    IdCategoria INTEGER NOT NULL,
+    Nome VARCHAR(255) NOT NULL UNIQUE,
+    FOREIGN key (IdEditora) 
+    REFERENCES EDITORA (IdEditora),
+    FOREIGN key (IdCategoria) 
+    REFERENCES CATEGORIA (IdCategoria)
+);
+
+-- Dados da tabela Livro
+INSERT INTO Livro (IdEditora, IdCategoria, Nome)
+VALUES 
+    (2,1,'Banco de Dados – 1 Edição'),
+    (1,1,'Oracle DataBase 11G Administração'),
+    (3,3,'Programação de Computadores em Java'),
+    (4,3,'Programação Orientada a Aspectos em Java'),
+    (4,2,'HTML5 – Guia Prático'),
+    (3,2,'XHTML: Guia de Referência para Desenvolvimento na Web'),
+    (1,4,'PHP para Desenvolvimento Profissional'),
+    (2,4,'PHP com Programação Orientada a Objetos');
+
+-- Tabela Livro_Autor
+CREATE TABLE IF NOT EXISTS LIVRO_AUTOR (
+    IdLivro INTEGER NOT NULL,
+    IdAutor INTEGER NOT NULL,
+    FOREIGN KEY (IdLivro)
+    REFERENCES LIVRO (IdLivro),
+    FOREIGN KEY (IdAutor)
+    REFERENCES AUTOR (IdAutor),
+    PRIMARY KEY (IdLivro, IdAutor)
+);
+
+-- Dados da tabela Livro_Autor
+INSERT INTO LIVRO_AUTOR (IdLivro, IdAutor)
+VALUES 
+    (1,1),
+    (1,2),
+    (2,3),
+    (3,4),
+    (4,5),
+    (4,6),
+    (5,7),
+    (6,8),
+    (7,9),
+    (8,10);
+
+-- Tabela Aluno
+CREATE TABLE IF NOT EXISTS ALUNO (
+    IdAluno SERIAL PRIMARY KEY,
+    Nome VARCHAR(255) NOT NULL
+);
+
+-- Dados da tabela Aluno
+INSERT INTO ALUNO (Nome)
+VALUES
+    ('Mario'),
+    ('João'),
+    ('Paulo'),
+    ('Pedro'),
+    ('Maria');
+
+-- Tabela Emprestimo
+CREATE TABLE IF NOT EXISTS EMPRESTIMO (
+    IdEmprestimo SERIAL PRIMARY KEY,
+    IdAluno INTEGER NOT NULL,
+    Data_Emprestimo DATE NOT NULL DEFAULT CURRENT_DATE,
+    Data_Devolucao DATE NOT NULL,
+    Valor NUMERIC (10,2),
+    Devolvido CHAR(1) NOT NULL,
+    FOREIGN KEY (IdAluno)
+    REFERENCES ALUNO (IdAluno)
+);
+
+-- Dados da tabela Emprestimo
+INSERT INTO EMPRESTIMO (IdAluno, Data_Emprestimo, Data_Devolucao, Valor, Devolvido)
+VALUES 
+    (1,'2023-05-02','2023-05-12',10,'S'),
+    (1,'2023-04-23','2023-05-03',5,'N'),
+    (2,'2023-05-10','2023-05-20',12,'N'),
+    (3,'2023-05-10','2023-05-20',8,'S'),
+    (4,'2023-05-05','2023-05-15',15,'N'),
+    (4,'2023-05-07','2023-05-17',20,'S'),
+    (4,'2023-05-08','2023-05-18',5,'S');
+
+-- Tabela Emprestimo_Livro
+CREATE TABLE IF NOT EXISTS EMPRESTIMO_LIVRO (
+    IdEmprestimo INT NOT NULL,
+    IdLivro INT NOT NULL,
+    FOREIGN KEY (IdEmprestimo)
+    REFERENCES EMPRESTIMO (IdEmprestimo),
+    FOREIGN KEY (IdLivro)
+    REFERENCES LIVRO (IdLivro),
+    PRIMARY KEY (IdEmprestimo, IdLivro)
+);
+
+-- Dados da tabela Emprestimo_Livro
+INSERT INTO EMPRESTIMO_LIVRO (IdEmprestimo, IdLivro)
+VALUES	
+    (1,1),
+    (2,4),
+    (2,3),
+    (3,2),
+    (3,7),
+    (4,5),
+    (5,4),
+    (6,6),
+    (6,1),
+    (7,8);
+
+-- Criando índices para melhorar o desempenho
+CREATE INDEX IF NOT EXISTS idx_emprestimo ON EMPRESTIMO (Data_Emprestimo, Data_Devolucao);
+
+-- Finalizando a transação
+COMMIT;
+
+--CONSULTAS SIMPLES // continuidade do desafio
+SELECT  nome
+from autor
+order by nome 
+
+SELECT nome
+from aluno
+where nome like 'P%'
+
+select nome
+from livro
+where idcategoria in (SELECT idcategoria from categoria where nome in ('Banco de Dados','Java'))
+
+SELECT nome
+from livro
+where ideditora in (SELECT ideditora from editora where nome = 'Bookman')
+
+select*
+from emprestimo
+where data_emprestimo BETWEEN '2023-05-05' and '2023-05-10' 
+
+select*
+from emprestimo
+where data_emprestimo not BETWEEN '2023-05-05' and '2023-05-10' 
+
+select*
+from emprestimo
+where devolvido = 'S'
+
+--CONSULTAS COM AGRUPAMENTO SIMPLES
+SELECT COUNT(*) qtde_de_livros
+from livro
+
+select sum(valor)
+from emprestimo
+
+SELECT round(AVG(valor),2)
+from emprestimo
+
+SELECT MAX(valor)
+from emprestimo
+
+SELECT MIN(valor)
+from emprestimo
+
+select sum(valor)
+from emprestimo
+where data_emprestimo BETWEEN '2023-05-05' and '2023-05-10' 
+
+select COUNT(*)
+from emprestimo
+where data_emprestimo BETWEEN '2023-05-01' and '2023-05-05'
+
+--Consultas com JOIN
+--drop view vw_livro_catergoria_editora
+create view vw_livro as 
+select aa.nome as Livro, bb.nome as Categoria, cc.nome as Editora 
+from livro aa
+left join categoria bb
+on aa.idcategoria = bb.idcategoria
+left join editora cc
+on aa.ideditora = cc.ideditora
+
+create view vw_livro_autor as 
+select aa.nome as Livro, cc.nome as Autor 
+from livro aa
+left join livro_autor bb
+on aa.idlivro = bb.idlivro
+left join autor cc
+on bb.idautor = cc.idautor
+
+SELECT Livro 
+from vw_livro_autor
+where Autor = 'Ian Graham' 
+
+SELECT aa.nome as Aluno, bb.data_emprestimo, bb.data_devolucao
+from aluno aa
+LEFT join emprestimo bb
+on aa.idaluno=bb.idaluno
+
+select aa.nome as livros_emprestados
+from livro aa
+left join emprestimo_livro bb
+on aa.idlivro=bb.idlivro
+where bb.idemprestimo is not null
+
+--CONSULTAS COM AGRUPAMENTO + JOIN
+SELECT aa.nome as Editora, count(idlivro) qtde_livros
+from editora aa
+LEFT join livro bb
+on aa.ideditora=bb.ideditora
+group by 1
+
+SELECT aa.nome as Categoria, count(idlivro) qtde_livros
+from categoria aa
+LEFT join livro bb
+on aa.idcategoria=bb.idcategoria
+group by 1
+
+SELECT aa.nome as Autor, count(bb.idlivro) qtde_livros
+from autor aa
+LEFT join livro_autor bb
+on aa.idautor=bb.idautor
+group by 1
+
+SELECT aa.nome as Aluno, count(bb.idemprestimo) qtde_emprestimo
+from aluno aa
+LEFT join emprestimo bb
+on aa.idaluno=bb.idaluno
+group by 1
+
+SELECT aa.nome as Aluno, sum(COALESCE(bb.valor,0)) vl_emprestimo
+from aluno aa
+LEFT join emprestimo bb
+on aa.idaluno=bb.idaluno
+group by 1
+
+SELECT aa.nome as Aluno, sum(COALESCE(bb.valor,0)) vl_emprestimo
+from aluno aa
+LEFT join emprestimo bb
+on aa.idaluno=bb.idaluno
+group by 1
+HAVING sum(COALESCE(bb.valor,0)) > 7
+
+--CONSULTAS COMANDOS DIVERSOS
+SELECT UPPER(nome) as Aluno
+from aluno
+order by aluno DESC
+
+SELECT*
+from emprestimo
+where to_char(data_emprestimo, 'yyyy-mm') = '2023-04' 
+
+SELECT*, case when devolvido = 'S' then 'Devolução completa' else 'Em atraso' end status_devolucao
+from emprestimo
+
+SELECT SUBSTRING(nome,5,6) caracteres
+from autor
+
+SELECT valor, to_char(data_emprestimo, 'TMMonth','NLS_DATE_LANGUAGE=Portuguese') as "Mês"
+from emprestimo
+
+--SUBCONSULTAS
+SELECT data_emprestimo, valor
+from emprestimo
+where valor > (SELECT avg(valor)
+from emprestimo
+)
+
+with emprestimo_qtd_livro as (
+SELECT idemprestimo, COUNT(idemprestimo) over (PARTITION by idemprestimo) as qtd_livro
+from emprestimo_livro
+)  
+SELECT data_emprestimo, valor
+from emprestimo
+where idemprestimo in (SELECT DISTINCT idemprestimo
+from emprestimo_qtd_livro
+where qtd_livro > 1
+)
+
+SELECT data_emprestimo, valor
+from emprestimo
+where valor < (SELECT sum(valor)
+from emprestimo
+)
+
+-- QUERY database
+SELECT * 
+FROM emprestimo;
